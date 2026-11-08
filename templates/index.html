@@ -1,0 +1,491 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack | Personal Finance Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+    <body class="{{ settings.theme }}-theme"></body>
+
+<div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <span class="brand-icon">F</span>
+            <span>FinTrack</span>
+        </div>
+
+        <div class="sidebar-search">
+            <span>⌕</span>
+            <input type="text" placeholder="Search...">
+        </div>
+
+        <p class="menu-heading">MENU</p>
+
+        <nav class="sidebar-menu">
+            <a href="/" class="active">▦ &nbsp; Overview</a>
+            <a href="/expenses">▤ &nbsp; Transactions</a>
+            <a href="#budget">◉ &nbsp; Budgeting</a>
+            <a href="#reports">▥ &nbsp; Reports</a>
+            <a href="/about">ⓘ &nbsp; About</a>
+        </nav>
+
+        <p class="menu-heading other-heading">OTHER</p>
+
+        <nav class="sidebar-menu">
+<a href="/settings">⚙ &nbsp; Settings</a>        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="profile">
+                <div class="profile-avatar">M</div>
+                <div>
+                    <strong>Syed Mohsin Shah</strong>
+                    <small>Personal Account</small>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div>
+                <h1>Hello, Mohsin 👋</h1>
+                <p>Your finances, simplified and under control.</p>
+            </div>
+
+            
+<div class="topbar-right">
+
+    <span>{{ today }}</span>
+
+    <a href="/calendar" class="top-icon"
+       title="Open Expense Calendar"
+       style="text-decoration:none; color:inherit;">
+        📅
+    </a>
+
+    <a href="/notifications" class="top-icon"
+       title="View Notifications"
+       style="text-decoration:none; color:inherit;">
+        🔔
+    </a>
+
+</div>
+
+        </header>
+
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <!-- SUMMARY CARDS -->
+        <section class="summary-grid">
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon">▣</span>
+                    <span class="stat-menu">⋮</span>
+                </div>
+                <p>Total Spending</p>
+<h2>{{ settings.currency }}{{ "%.2f"|format(total) }}</h2>                <small class="stat-note">Your recorded expenses</small>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon">⇄</span>
+                    <span class="stat-menu">⋮</span>
+                </div>
+                <p>Total Transactions</p>
+                <h2>{{ count }}</h2>
+                <small class="stat-note">All recorded transactions</small>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon">◷</span>
+                    <span class="stat-menu">⋮</span>
+                </div>
+                <p>Average Expense</p>
+                <h2 id="averageExpense">₹0.00</h2>
+                <small class="stat-note">Per transaction</small>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-icon">◈</span>
+                    <span class="stat-menu">⋮</span>
+                </div>
+                <p>Largest Expense</p>
+                <h2 id="largestExpense">₹0.00</h2>
+                <small class="stat-note">Highest recorded transaction</small>
+            </div>
+
+        </section>
+
+        <!-- CHARTS -->
+        <section class="charts-grid" id="reports">
+
+            <div class="panel spending-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Spending Breakdown</h2>
+                        <p>Where your money goes</p>
+                    </div>
+                    <span class="panel-badge">By Category</span>
+                </div>
+
+                <div class="donut-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+
+                <div id="categoryLegend" class="category-legend"></div>
+            </div>
+
+            <div class="panel finance-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Finance Statistics</h2>
+                        <p>Your monthly spending activity</p>
+                    </div>
+                    <span class="panel-badge">This Year</span>
+                </div>
+
+                <div class="bar-container">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- LOWER SECTION -->
+        <section class="lower-grid">
+
+            <!-- ADD EXPENSE -->
+            <div class="panel expense-form-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Add New Expense</h2>
+                        <p>Record your latest spending</p>
+                    </div>
+                    <span class="form-icon">＋</span>
+                </div>
+
+                <form action="/add-expense" method="POST">
+
+                    <label>Amount (₹ INR — Base Currency)</label>
+                    <input
+                        type="number"
+                        name="amount"
+                        min="0.01"
+                        step="0.01"
+                        placeholder="Enter amount"
+                        required
+                    >
+
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="">Select a category</option>
+                        <option>Food</option>
+                        <option>Travel</option>
+                        <option>Shopping</option>
+                        <option>Education</option>
+                        <option>Entertainment</option>
+                        <option>Health</option>
+                        <option>Bills</option>
+                        <option>Other</option>
+                    </select>
+
+                    <label>Description</label>
+                    <input
+                        type="text"
+                        name="description"
+                        placeholder="What did you spend on?"
+                        required
+                    >
+
+                    <label>Date</label>
+                    <input
+                        type="date"
+                        name="expense_date"
+                        value="{{ today }}"
+                        required
+                    >
+
+                    <button type="submit" class="primary-button">
+                        + Add Expense
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- RECENT TRANSACTIONS -->
+            <div class="panel transactions-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Recent Transactions</h2>
+                        <p>Your latest recorded expenses</p>
+                    </div>
+                    <a href="/expenses" class="view-all">View All →</a>
+                </div>
+
+                {% if expenses %}
+                <div class="transaction-list">
+
+                    {% for expense in expenses[:5] %}
+                    <div
+                        class="transaction-row expense-data"
+                        data-category="{{ expense.category }}"
+                        data-amount="{{ expense.amount }}"
+                        data-date="{{ expense.expense_date }}"
+                    >
+
+                        <div class="transaction-icon">
+                            {% if expense.category == "Food" %}🍔
+                            {% elif expense.category == "Travel" %}🚕
+                            {% elif expense.category == "Shopping" %}🛍️
+                            {% elif expense.category == "Education" %}📚
+                            {% elif expense.category == "Entertainment" %}🎬
+                            {% elif expense.category == "Health" %}💊
+                            {% elif expense.category == "Bills" %}🧾
+                            {% else %}💳
+                            {% endif %}
+                        </div>
+
+                        <div class="transaction-details">
+                            <strong>{{ expense.description }}</strong>
+                            <small>{{ expense.category }}</small>
+                        </div>
+
+                        <div class="transaction-amount">
+                            <strong>-₹{{ "%.2f"|format(expense.amount) }}</strong>
+                            <small>{{ expense.expense_date }}</small>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+
+                </div>
+
+                {% else %}
+                    <div class="empty-state">
+                        <span>📊</span>
+                        <p>No transactions yet.</p>
+                        <small>Add your first expense to see your statistics.</small>
+                    </div>
+                {% endif %}
+
+            </div>
+
+        </section>
+
+        <footer>
+            FinTrack &nbsp; | &nbsp; Personal Expense Tracker
+            <br>
+            Developed by Syed Mohsin Shah
+        </footer>
+
+    </main>
+</div>
+
+<!-- CHART SCRIPT -->
+<script>
+    const expenseRows = {{ chart_expenses | tojson }};
+    const currencySymbol = {{ settings.currency | tojson }};
+
+    const categories = {};
+    const monthly = Array(12).fill(0);
+    const amounts = [];
+
+    expenseRows.forEach(row => {
+        const category = row.category;
+const amount = Number(row.amount);
+const date = row.expense_date;
+
+        if (!Number.isFinite(amount)) return;
+
+        categories[category] = (categories[category] || 0) + amount;
+        amounts.push(amount);
+
+        const parsedDate = new Date(date + "T00:00:00");
+
+        if (!isNaN(parsedDate)) {
+            monthly[parsedDate.getMonth()] += amount;
+        }
+    });
+
+    // EXTRA STATISTICS
+    const sum = amounts.reduce((a, b) => a + b, 0);
+
+    document.getElementById("averageExpense").textContent =
+        currencySymbol + (amounts.length ? sum / amounts.length : 0).toFixed(2)
+
+    document.getElementById("largestExpense").textContent =
+        currencySymbol + (amounts.length ? Math.max(...amounts) : 0).toFixed(2)
+
+    
+
+    // CATEGORY DOUGHNUT CHART
+    const categoryNames = Object.keys(categories);
+    const categoryValues = Object.values(categories);
+
+    const chartColors = [
+        "#1479f8",
+        "#102e70",
+        "#8ec5ff",
+        "#41b6e6",
+        "#7965e8",
+        "#20b99a",
+        "#f4a340",
+        "#ef6685"
+    ];
+
+    new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+
+        data: {
+            labels: categoryNames,
+            datasets: [{
+                data: categoryValues,
+                backgroundColor: chartColors,
+                borderWidth: 3,
+                borderColor: "#ffffff",
+                hoverOffset: 18,
+                spacing: 3
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "68%",
+
+            animation: {
+                animateScale: true,
+                animateRotate: true,
+                duration: 1200
+            },
+
+            plugins: {
+                legend: { display: false },
+
+                tooltip: {
+                    enabled: true,
+                    backgroundColor: "#142653",
+                    padding: 14,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            return " " + currencySymbol + context.raw.toFixed(2)
+                        }
+                    }
+                }
+            },
+
+            onHover: (event, elements) => {
+                event.native.target.style.cursor =
+                    elements.length ? "pointer" : "default";
+            }
+        }
+    });
+
+    // CATEGORY LEGEND
+    const legend = document.getElementById("categoryLegend");
+
+    categoryNames.forEach((name, index) => {
+        const item = document.createElement("div");
+        item.className = "legend-item";
+
+        item.innerHTML = `
+            <span class="legend-dot"
+                  style="background:${chartColors[index % chartColors.length]}"></span>
+            <span>${name}</span>
+            <strong>${currencySymbol}${categoryValues[index].toFixed(2)}</strong>
+        `;
+
+        legend.appendChild(item);
+    });
+
+    if (!categoryNames.length) {
+        legend.innerHTML = "<p>No spending data available yet.</p>";
+    }
+
+    // MONTHLY BAR CHART
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "bar",
+
+        data: {
+            labels: [
+                "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+            ],
+
+            datasets: [{
+                label: "Expenses",
+                data: monthly,
+                backgroundColor: "#1878f5",
+                hoverBackgroundColor: "#0c347d",
+                borderRadius: 7,
+                borderSkipped: false,
+                barThickness: 17
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            animation: {
+                duration: 1200,
+                easing: "easeOutQuart"
+            },
+
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+
+            plugins: {
+                legend: { display: false },
+
+                tooltip: {
+                    backgroundColor: "#142653",
+                    padding: 13,
+                    callbacks: {
+                        label: function(context) {
+                            return " Spending: " + currencySymbol +
+                                context.raw.toFixed(2);
+                        }
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "#edf1f7" },
+                    ticks: {
+                        callback: value => "₹" + value
+                    }
+                },
+
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

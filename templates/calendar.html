@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar | FinTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ settings.theme }}-theme">
+<div class="app-container">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">F</div>
+            <h2>FinTrack</h2>
+        </div>
+
+        <div class="search-box">⌕ &nbsp; Search...</div>
+        <p class="menu-title">MENU</p>
+
+        <nav class="sidebar-menu">
+            <a href="/">▦ &nbsp; Overview</a>
+            <a href="/expenses">▤ &nbsp; Transactions</a>
+            <a href="/calendar" class="active">▣ &nbsp; Calendar</a>
+            <a href="/notifications">♢ &nbsp; Notifications</a>
+            <a href="/about">ⓘ &nbsp; About</a>
+        </nav>
+
+        <p class="menu-title other-title">OTHER</p>
+
+        <nav class="sidebar-menu">
+            <a href="/settings">⚙ &nbsp; Settings</a>
+        </nav>
+
+        <div class="profile">
+            <div class="profile-avatar">M</div>
+            <div class="profile-info">
+                <strong>{{ settings.display_name }}</strong>
+                <small>Personal Account</small>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <h1>Expense Calendar</h1>
+                <p class="subtitle">Explore your expenses by date.</p>
+            </div>
+            <a href="/" class="view-link">← Back to Overview</a>
+        </header>
+
+        <section class="panel calendar-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Select a Date</h2>
+                    <p>Choose a date to view your daily expenses.</p>
+                </div>
+                <span class="panel-badge">Daily Overview</span>
+            </div>
+
+            <form action="/calendar" method="GET" class="calendar-form">
+                <label for="date">Choose Date</label>
+                <input
+                    type="date"
+                    id="date"
+                    name="date"
+                    value="{{ selected_date }}"
+                    required
+                >
+                <button type="submit" class="primary-button">
+                    View Expenses
+                </button>
+            </form>
+
+        </section>
+
+        <section class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">{{ settings.currency }}</div>
+                <p>Total Spending on Selected Date</p>
+                <h2>{{ settings.currency }}{{ "%.2f"|format(daily_total) }}</h2>
+                <small>{{ selected_date }}</small>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">▤</div>
+                <p>Transactions on Selected Date</p>
+                <h2>{{ expenses|length }}</h2>
+                <small>Recorded transactions</small>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div>
+                    <h2>Daily Transactions</h2>
+                    <p>Expenses recorded on {{ selected_date }}.</p>
+                </div>
+            </div>
+
+            {% if expenses %}
+            <div class="table-responsive">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for expense in expenses %}
+                        <tr>
+                            <td><strong>{{ expense.description }}</strong></td>
+                            <td>
+                                <span class="category-badge">
+                                    {{ expense.category }}
+                                </span>
+                            </td>
+                            <td class="expense-amount">
+                                {{ settings.currency }}{{ "%.2f"|format(expense.amount) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📅</div>
+                <h3>No Expenses Found</h3>
+                <p>You haven't recorded any expenses on this date.</p>
+                <a href="/" class="view-link">Add an Expense</a>
+            </div>
+            {% endif %}
+
+        </section>
+
+        <footer class="dashboard-footer">
+            FinTrack | Personal Expense Tracker
+            <br>
+            Developed by Syed Mohsin Shah
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

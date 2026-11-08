@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications | FinTrack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="{{ settings.theme }}-theme">
+<div class="app-container">
+
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-icon">F</div>
+            <h2>FinTrack</h2>
+        </div>
+
+        <div class="search-box">⌕ &nbsp; Search...</div>
+        <p class="menu-title">MENU</p>
+
+        <nav class="sidebar-menu">
+            <a href="/">▦ &nbsp; Overview</a>
+            <a href="/expenses">▤ &nbsp; Transactions</a>
+            <a href="/calendar">▣ &nbsp; Calendar</a>
+            <a href="/notifications" class="active">♢ &nbsp; Notifications</a>
+            <a href="/about">ⓘ &nbsp; About</a>
+        </nav>
+
+        <p class="menu-title other-title">OTHER</p>
+
+        <nav class="sidebar-menu">
+            <a href="/settings">⚙ &nbsp; Settings</a>
+        </nav>
+
+        <div class="profile">
+            <div class="profile-avatar">M</div>
+            <div class="profile-info">
+                <strong>{{ settings.display_name }}</strong>
+                <small>Personal Account</small>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+
+        <header class="page-header">
+            <div>
+                <h1>Notifications</h1>
+                <p class="subtitle">Stay updated with your spending activity.</p>
+            </div>
+            <a href="/" class="view-link">← Back to Overview</a>
+        </header>
+
+        <section class="panel notifications-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Recent Activity</h2>
+                    <p>Your latest recorded expenses.</p>
+                </div>
+                <span class="panel-badge">{{ expenses|length }} Activities</span>
+            </div>
+
+            {% if expenses %}
+
+                {% for expense in expenses %}
+
+                <div class="notification-item">
+                    <div class="notification-icon">{{ settings.currency }}</div>
+
+                    <div class="notification-details">
+                        <strong>Expense Recorded</strong>
+                        <p>{{ expense.description }} — {{ expense.category }}</p>
+                        <small>{{ expense.expense_date }}</small>
+                    </div>
+
+                    <div class="notification-amount">
+                        {{ settings.currency }}{{ "%.2f"|format(expense.amount) }}
+                    </div>
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty-state">
+                    <div class="empty-icon">♢</div>
+                    <h3>No Notifications Yet</h3>
+                    <p>Your recent expense activity will appear here.</p>
+                </div>
+
+            {% endif %}
+
+        </section>
+
+        <footer class="dashboard-footer">
+            FinTrack | Personal Expense Tracker
+            <br>
+            Developed by Syed Mohsin Shah
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>
